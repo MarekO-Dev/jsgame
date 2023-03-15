@@ -1,0 +1,15 @@
+*{
+    padding: 0px;
+}
+body{
+    background-color: antiquewhite;
+}
+canvas{
+
+    border: 1px solid #000;
+    position: absolute;
+}
+
+input{
+    margin-top: 620px;
+}

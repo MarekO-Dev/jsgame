@@ -34,6 +34,17 @@ class WallBlock{
         this.h = h;
     }
 
+    settings = {
+        selected: false
+    };
+
+    set Selected(value){
+        this.settings.selected = value;
+    }
+
+    get Selected(){
+        return this.settings.selected;
+    }
     get Dimensions(){
         return {
             x: this.x,
@@ -135,12 +146,12 @@ function generateLevel(){
         Ctx[0].clearRect(0,0,800,600);
         for(let row = 0; row < level.length; row++){
             Ctx[0].beginPath();
-            Ctx[0].strokeStyle = '#00ff00';
+            Ctx[0].fillStyle = '#004400';
             level[row].forEach(block => {
                 //console.log(block);
                 if(block !== undefined){
-                    Ctx[0].rect(block.Dimensions.x, block.Dimensions.y, block.Dimensions.w, block.Dimensions.h);
-                    Ctx[0].stroke();
+                    Ctx[0].fillRect(block.Dimensions.x, block.Dimensions.y, block.Dimensions.w, block.Dimensions.h);
+                    
                 }
             });
         }
@@ -175,9 +186,20 @@ function colourBlock(x, y){
                     y > level[row][column].Dimensions.y &&
                     y < (level[row][column].Dimensions.y + level[row][column].Dimensions.h)){
                     console.log(level[row][column]);
-                    Ctx[0].beginPath();
-                    Ctx[0].fillStyle = '#ff0000';
-                    Ctx[0].fillRect(level[row][column].Dimensions.x, level[row][column].Dimensions.y, level[row][column].Dimensions.w, level[row][column].Dimensions.h);
+                    if(!level[row][column].Selected){
+                        Ctx[0].clearRect(level[row][column].Dimensions.x, level[row][column].Dimensions.y, level[row][column].Dimensions.w, level[row][column].Dimensions.h);
+                        Ctx[0].beginPath();
+                        Ctx[0].fillStyle = '#ff0000';
+                        Ctx[0].fillRect(level[row][column].Dimensions.x, level[row][column].Dimensions.y, level[row][column].Dimensions.w, level[row][column].Dimensions.h);
+                        level[row][column].Selected = true;
+                    }else if(level[row][column].Selected){
+                        Ctx[0].clearRect(level[row][column].Dimensions.x, level[row][column].Dimensions.y, level[row][column].Dimensions.w, level[row][column].Dimensions.h);
+                        Ctx[0].beginPath();
+                        Ctx[0].strokeStyle = '#000000';
+                        Ctx[0].rect(level[row][column].Dimensions.x, level[row][column].Dimensions.y, level[row][column].Dimensions.w, level[row][column].Dimensions.h);
+                        Ctx[0].stroke();
+                        level[row][column].Selected = false;
+                    }
                 }
             }
         }

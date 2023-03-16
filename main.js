@@ -2,6 +2,7 @@ const Canvas = [document.getElementById('c1'), document.getElementById('c2'), do
 const Ctx = [Canvas[0].getContext('2d'), Canvas[1].getContext('2d')];
 const Reseed_btn = document.getElementById('gl');
 const pressedButtons = {};
+const info = document.getElementById('info_display');
 
 
 
@@ -45,7 +46,7 @@ class WallBlock{
     get Selected(){
         return this.settings.selected;
     }
-    get Dimensions(){
+    get Dimensions(){5
         return {
             x: this.x,
             y: this.y,
@@ -54,6 +55,60 @@ class WallBlock{
         };
     }
 }
+
+class GUI_Button{
+    constructor(w, h, x, y, colour, text, textColour, onmouseover){
+        this.w = w;
+        this.h = h;
+        this.x = x;
+        this.y = y;
+        this.colour = colour;
+        this.text = text;
+        this.textColour = textColour;
+        this.onmouseover = onmouseover;
+    }
+
+    Draw(){
+        Ctx[1].beginPath();
+        Ctx[1].fillStyle = this.colour;
+        Ctx[1].fillRect(this.x, this.y*1.02, this.w, this.h);
+        Ctx[1].beginPath();
+        Ctx[1].font = '10px Verdana';
+        Ctx[1].fillStyle = this.textColour;
+        Ctx[1].fillText(this.text, this.x+(this.w*0.35), this.y+(this.h));
+    }
+}
+
+const GUI = {
+    width: 800,
+    height: 60,
+    x: 0,
+    y: Canvas[1].height - 60,
+    
+
+    colour: '#ff0000',
+
+    Buttons: {
+        $mapButton: new GUI_Button(100, 30, 20, 600, '#440388', 'Map', '#000000', 0),
+        $inventoryButton: new GUI_Button(100, 30, 130, 600, '#440388', 'Inventory', '#000000', 0)
+    },
+    DrawBackground: () => {
+        Ctx[1].beginPath();
+        Ctx[1].fillStyle = GUI.colour,
+        Ctx[1].fillRect(GUI.x, GUI.y, GUI.width, GUI.height);
+    },
+    DrawButtons: ()=>{
+        for(const Button in GUI.Buttons){
+            GUI.Buttons[Button].Draw();
+        }
+    },
+    Draw: () => {
+        
+        GUI.DrawBackground();
+        GUI.DrawButtons();
+    }
+};
+
 let level = [
                 [undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined],
                 [undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined],
@@ -157,8 +212,8 @@ function generateLevel(){
         }
     }
     clearLevelArray();
-    randomlyAssignWallBlocks();
     clearCanvas();
+    randomlyAssignWallBlocks();
     drawBlocks();
 }
 
@@ -168,15 +223,33 @@ function generateLevel(){
 
 
 (()=>{
-    Ctx[0].beginPath();
-    Ctx[0].rect(150, 150, 100, 100);
-    Ctx[0].stroke();
+    
+    GUI.Draw();
     generateLevel();
     //console.log(level);
 })();
 
 function colourBlock(x, y){
+    let colouredBlocks = 0;
 
+    function Mark(row,column){
+        Ctx[0].clearRect(level[row][column].Dimensions.x, level[row][column].Dimensions.y, level[row][column].Dimensions.w, level[row][column].Dimensions.h);
+        Ctx[0].beginPath();
+        Ctx[0].fillStyle = '#ff0000';
+        Ctx[0].fillRect(level[row][column].Dimensions.x, level[row][column].Dimensions.y, level[row][column].Dimensions.w, level[row][column].Dimensions.h);
+        level[row][column].Selected = true;
+        colouredBlocks++;
+        info.innerText = `Selected blocks: ${colouredBlocks}`;
+
+    }
+
+    function UnMark(row, column){
+        Ctx[0].clearRect(level[row][column].Dimensions.x, level[row][column].Dimensions.y, level[row][column].Dimensions.w, level[row][column].Dimensions.h);
+        Ctx[0].beginPath();
+        Ctx[0].fillStyle = '#004400';
+        Ctx[0].fillRect(level[row][column].Dimensions.x, level[row][column].Dimensions.y, level[row][column].Dimensions.w, level[row][column].Dimensions.h);
+        level[row][column].Selected = false;
+    }
 
     for(let row = 0; row < level.length; row++){
         for(let column = 0; column < level[row].length; column++){
@@ -187,18 +260,9 @@ function colourBlock(x, y){
                     y < (level[row][column].Dimensions.y + level[row][column].Dimensions.h)){
                     console.log(level[row][column]);
                     if(!level[row][column].Selected){
-                        Ctx[0].clearRect(level[row][column].Dimensions.x, level[row][column].Dimensions.y, level[row][column].Dimensions.w, level[row][column].Dimensions.h);
-                        Ctx[0].beginPath();
-                        Ctx[0].fillStyle = '#ff0000';
-                        Ctx[0].fillRect(level[row][column].Dimensions.x, level[row][column].Dimensions.y, level[row][column].Dimensions.w, level[row][column].Dimensions.h);
-                        level[row][column].Selected = true;
+                        Mark(row, column);
                     }else if(level[row][column].Selected){
-                        Ctx[0].clearRect(level[row][column].Dimensions.x, level[row][column].Dimensions.y, level[row][column].Dimensions.w, level[row][column].Dimensions.h);
-                        Ctx[0].beginPath();
-                        Ctx[0].strokeStyle = '#000000';
-                        Ctx[0].rect(level[row][column].Dimensions.x, level[row][column].Dimensions.y, level[row][column].Dimensions.w, level[row][column].Dimensions.h);
-                        Ctx[0].stroke();
-                        level[row][column].Selected = false;
+                        UnMark(row, column);
                     }
                 }
             }
@@ -228,6 +292,35 @@ Canvas[2].addEventListener('click', (e)=>{
     //console.log(e.offsetX);
     // TEST
     colourBlock(e.offsetX, e.offsetY);
+});
+
+
+function checkIfOverButton(mouseX, mouseY){
+    for(const Button in GUI.Buttons){
+        if(mouseX > GUI['Buttons'][Button].x &&
+            mouseX < GUI['Buttons'][Button].x + GUI['Buttons'][Button].width &&
+            mouseY > GUI['Buttons'][Button].y &&
+            mouseY < GUI['Buttons'][Button].y+GUI['Buttons'][Button].height){
+                console.log(`I am over ${GUI['Buttons'][Button].text}`);
+        }
+    }
+}
+Canvas[2].addEventListener('mousemove', (e)=>{
+    const mouseX = e.offsetX;
+    const mouseY = e.offsetY;
+
+    if(mouseX > GUI.x &&
+        mouseX < GUI.x + GUI.width &&
+        mouseY > GUI.y &&
+        mouseY < GUI.y+GUI.height){
+        console.log('I am over GUI');
+        GUI.colour = '#000000';
+        GUI.Draw();
+        checkIfOverButton(mouseX, mouseY);
+    }else{
+        GUI.colour = '#007700';
+        GUI.Draw();
+    }
 });
 
 Reseed_btn.addEventListener('click', () => {
